@@ -45,21 +45,22 @@ right_image_dataset = []
 
 for img in center_images:
     if img[:4] == "IMG/":
-        center_image_dataset.append(misc.imread("data/" + img))
+        center_image_dataset.append(misc.imresize(misc.imread("data/" + img), size=[32, 32, 3]))
     else:
-        center_image_dataset.append(misc.imread(img))
+        center_image_dataset.append(misc.imresize(misc.imread(img[41:]), size=[32,32,3]))
 for img in left_images:
     if img[:4] == " IMG":
-        left_image_dataset.append(misc.imread("data/" + img[1:]))
+        left_image_dataset.append(misc.imresize(misc.imread("data/" + img[1:]), size=[32,32,3]))
     else:
-        left_image_dataset.append(misc.imread(img[1:]))
+        left_image_dataset.append(misc.imresize(misc.imread(img[42:]), size=[32,32,3]))
 for img in right_images:
     if img[:4] == " IMG":
-        right_image_dataset.append(misc.imread("data/" + img[1:]))
+        right_image_dataset.append(misc.imresize(misc.imread("data/" + img[1:]), size=[32,32,3]))
     else:
-        right_image_dataset.append(misc.imread(img[1:]))
+        right_image_dataset.append(misc.imresize(misc.imread(img[42:]), size=[32,32,3]))
 
 center_image_dataset = np.asarray(center_image_dataset)
+print("center shape:", center_image_dataset.shape)
 left_image_dataset = np.asarray(left_image_dataset)
 right_image_dataset = np.asarray(right_image_dataset)
 
@@ -85,7 +86,7 @@ uniques = len(uniques) + 1
 print("unique cases:", uniques)
 
 model = Sequential()
-model.add(Convolution2D(32, 3, 3, border_mode='valid', input_shape=(160,320,3)))
+model.add(Convolution2D(32, 3, 3, border_mode='valid', input_shape=(32,32,3)))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size = (2,2)))
 model.add(Convolution2D(32, 3, 3))
@@ -105,7 +106,7 @@ model.add(Dense(1))
 model.compile(loss='mse', optimizer='adam')
 
 
-history = model.fit(dataset_inputs, dataset_labels, batch_size=2, nb_epoch=20, validation_split=0.2)
+history = model.fit(dataset_inputs, dataset_labels, batch_size=512, nb_epoch=40, validation_split=0.2)
 
 
 model.save("model.h5")
