@@ -3,7 +3,7 @@ import base64
 from datetime import datetime
 import os
 import shutil
-
+from scipy import misc
 import numpy as np
 import socketio
 import eventlet
@@ -11,7 +11,7 @@ import eventlet.wsgi
 from PIL import Image
 from flask import Flask
 from io import BytesIO
-
+import h5py
 from keras.models import load_model
 
 sio = socketio.Server()
@@ -19,10 +19,11 @@ app = Flask(__name__)
 model = None
 prev_image_array = None
 
+image_size = [80,160,3]
+image_size_input = (image_size[0],image_size[1],image_size[2])
 
 @sio.on('telemetry')
 def telemetry(sid, data):
-    print("HERE\n\n\n\n")
     if data:
         # The current steering angle of the car
         steering_angle = data["steering_angle"]
@@ -32,13 +33,14 @@ def telemetry(sid, data):
         speed = data["speed"]
         # The current image from the center camera of the car
         imgString = data["image"]
-        image = Image.open(BytesIO(base64.b64decode(imgString)))
+        image = misc.imresize(Image.open(BytesIO(base64.b64decode(imgString))), size=image_size)
         image_array = np.asarray(image)
-        steering_angle = (model.predict(image_array[None, :, :, :], batch_size=1))/100-1
-        print(steering_angle)
-        steering_angle = float(steering_angle)
-        throttle = 0.2
-        print("steering_angle, throttle",steering_angle, throttle)
+        # crop_t = image_size[0]-int((50/160)*image_size[0])
+        # crop_b = int((20/160)*image_size[0])
+        pure_angle = float(model.predict(image_array[None,:,:,:], batch_size=1))
+        steering_angle = float(pure_angle)
+        # throttle = 0.2
+        print("pure_angle", pure_angle, "\nsteering_angle, throttle",steering_angle, throttle)
         send_control(steering_angle, throttle)
 
         # save frame
@@ -63,7 +65,8 @@ def send_control(steering_angle, throttle):
         data={
             'steering_angle': steering_angle.__str__(),
             'throttle': (0.2).__str__()
-            # 'throttle': throttle.__str__()
+            #for track 2 due to climbs
+            # 'throttle': throttle.__str__(0.29)
         },
         skip_sid=True)
 
