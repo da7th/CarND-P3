@@ -96,25 +96,25 @@ At the end of the process, the vehicle is able to drive autonomously around the 
 
 The final model architecture (steering_model.py lines: 119-154) consisted of a convolution neural network with the following layers and layer sizes:
 
-#normalisation to a mean of 0 by dividing with pixel value 255 and subtracting 0.5
-#crop the input of this layer by crop_t from the top and crop_b from the bottom
-#convolution layer with input shape 60,160,3
-#Traffic Sign Classifier model adapted to generally flow like the Nvidia model
-#normalisation>convolutions>flat>single output
-#convolutional layer, filters=32@3x3 stride, border mode is set to valid
-#relu activation
-#maxpool layer with 2x2 filter
-#convolutional layer, filters=32@3x3 stride
-#relu activation
-#maxpool layer with 2x2 filter
-#convolutional layer, filters=32@3x3 stride
-#relu activation
-#flatten the input to 1D
-#drop out layer with keep = 20%
-#relu activation
-#drop out layer with keep = 50%
-#relu activation
-#full connected layer to the single output node
+normalisation to a mean of 0 by dividing with pixel value 255 and subtracting 0.5
+crop the input of this layer by crop_t from the top and crop_b from the bottom
+convolution layer with input shape (80-crop_b-top),160,3
+Traffic Sign Classifier model adapted to generally flow like the Nvidia model
+normalisation>convolutions>flat>single output
+convolutional layer, filters=32@3x3 stride, border mode is set to valid
+relu activation
+maxpool layer with 2x2 filter
+convolutional layer, filters=32@3x3 stride
+relu activation
+maxpool layer with 2x2 filter
+convolutional layer, filters=32@3x3 stride
+relu activation
+flatten the input to 1D
+drop out layer with keep = 20%
+relu activation
+drop out layer with keep = 50%
+relu activation
+full connected layer to the single output node
 
 ####3. Creation of the Training Set & Training Process
 
