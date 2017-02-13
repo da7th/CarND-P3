@@ -15,6 +15,7 @@ The goals / steps of this project are the following:
 [image2]: ./examples/center_2017_02_12_19_28_13_724.jpg "Recovery Image"
 [image3]: ./examples/center_2017_02_12_19_28_44_633.jpg "Recovery Image"
 [image4]: ./examples/left_2017_02_12_19_28_14_506.jpg "Recovery Image"
+[image7]: ./examples/recovery.gif "Recovery gif"
 [image5]: ./examples/center_2017_02_12_19_28_54_611.jpg "Normal Image"
 [image6]: ./examples/center_2017_02_12_19_28_54_611_flip.jpg "Flipped Image"
 
@@ -120,20 +121,21 @@ full connected layer to the single output node
 
 To capture good driving behavior, I first recorded four laps on track one using center lane driving. Here is an example image of center lane driving:
 
-![alt text][image2]
+![alt text][image5]
 
 I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to recover by itself incase it steers off course accidentally. These images show what a recovery looks like starting from the side of the road and turning sharply inwards as:
 
+![alt text][image2]
 ![alt text][image3]
 ![alt text][image4]
-![alt text][image5]
+![alt text][image7]
 
 Then I repeated this process on track two in order to get more data points.
 
 To augment the data sat, I also flipped images and angles thinking that this would remove and directional bias and provide easy data for training. For example, here is an image that has then been flipped:
 
+![alt text][image5]
 ![alt text][image6]
-![alt text][image7]
 
 After the collection process, I had 115,860 data points. I then preprocessed this data by resizing the image to half the actual resolution as it was easier to load. Doing this meant that I had to modify the drive.py file to resize prediction images to the same resolution.
 
