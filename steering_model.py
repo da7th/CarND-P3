@@ -6,6 +6,7 @@ from sklearn.utils import shuffle
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Convolution2D, MaxPooling2D, Cropping2D, Lambda
+from keras.layers.advanced_activations import ELU
 from keras.layers.core import Dense, Activation, Flatten, Dropout
 import tensorflow as tf
 from keras.wrappers.scikit_learn import KerasRegressor
@@ -13,6 +14,7 @@ from sklearn.model_selection import cross_val_score, KFold, train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 import sklearn
+from equalise_function import equalise, transform_image
 
 #name of the home directory
 folder = "data/"
@@ -36,12 +38,21 @@ with open("data/driving_log.csv") as csvfile:
         steering_angles.append(float(row['steering']))
     print("reading CSV file complete")
 #initialise empty array that will store the loaded and resized files, those same files will be stored in their flipped form
+
+steering_angles, center_images, left_images, right_images = equalise(steering_angles, center_images, left_images, right_images)
+
 center_image_dataset = []
 left_image_dataset = []
 right_image_dataset = []
 center_image_dataset_flip = []
 left_image_dataset_flip = []
 right_image_dataset_flip = []
+center_image_dataset_tranformed = []
+left_image_dataset_tranformed = []
+right_image_dataset_tranformed = []
+center_image_dataset_flip_tranformed = []
+left_image_dataset_flip_tranformed = []
+right_image_dataset_flip_tranformed = []
 #define the resolution the images will be loaded in and what will be the input to the model's first layer
 image_size = [80,160,3]
 image_size_input = (image_size[0],image_size[1],image_size[2])
@@ -55,30 +66,42 @@ for img in center_images:
     if img[:4] == "IMG/":
         center_image_dataset.append(misc.imresize(misc.imread("data/" + img), size=image_size))
         center_image_dataset_flip.append(misc.imresize(np.fliplr(misc.imread("data/" + img)), size=image_size))
+        center_image_dataset_tranformed.append(misc.imresize(transform_image(misc.imread("data/" + img)), size=image_size))
+        center_image_dataset_flip_tranformed.append(misc.imresize(transform_image(np.fliplr(misc.imread("data/" + img))), size=image_size))
     else:
         center_image_dataset.append(misc.imresize(misc.imread(img[41:]), size=image_size))
         center_image_dataset_flip.append(misc.imresize(np.fliplr(misc.imread(img[41:])), size=image_size))
-print("\nLoading center images complete, norm+flip: ", len(center_image_dataset)+len(center_image_dataset_flip), "\n")
+        center_image_dataset_tranformed.append(misc.imresize(transform_image(misc.imread(img[41:])), size=image_size))
+        center_image_dataset_flip_tranformed.append(misc.imresize(transform_image(np.fliplr(misc.imread(img[41:]))), size=image_size))
+print("\nLoading center images complete, norm+flip+trans_norm+trans_flip: ", len(center_image_dataset)*4, "\n")
 print("\nLoading left images...\n")
 #load and flip the images in taken by the left camera and store in their respective arrays
 for img in left_images:
     if img[:4] == " IMG":
         left_image_dataset.append(misc.imresize(misc.imread("data/" + img[1:]), size=image_size))
         left_image_dataset_flip.append(misc.imresize(np.fliplr(misc.imread("data/" + img[1:])), size=image_size))
+        left_image_dataset_tranformed.append(misc.imresize(transform_image(misc.imread("data/" + img[1:])), size=image_size))
+        left_image_dataset_flip_tranformed.append(misc.imresize(transform_image(np.fliplr(misc.imread("data/" + img[1:]))), size=image_size))
     else:
         left_image_dataset.append(misc.imresize(misc.imread(img[42:]), size=image_size))
         left_image_dataset_flip.append(misc.imresize(np.fliplr(misc.imread(img[42:])), size=image_size))
-print("\nLoading left images complete, norm+flip: ", len(left_image_dataset)+len(left_image_dataset_flip), "\n")
+        left_image_dataset_tranformed.append(misc.imresize(transform_image(misc.imread(img[42:])), size=image_size))
+        left_image_dataset_flip_tranformed.append(misc.imresize(transform_image(np.fliplr(misc.imread(img[42:]))), size=image_size))
+print("\nLoading left images complete, norm+flip+trans_norm+trans_flip: ", len(left_image_dataset)*4, "\n")
 print("\nLoading right images...\n")
 #load and flip the images in taken by the right camera and store in their respective arrays
 for img in right_images:
     if img[:4] == " IMG":
         right_image_dataset.append(misc.imresize(misc.imread("data/" + img[1:]), size=image_size))
         right_image_dataset_flip.append(misc.imresize(np.fliplr(misc.imread("data/" + img[1:])), size=image_size))
+        right_image_dataset_tranformed.append(misc.imresize(transform_image(misc.imread("data/" + img[1:])), size=image_size))
+        right_image_dataset_flip_tranformed.append(misc.imresize(transform_image(np.fliplr(misc.imread("data/" + img[1:]))), size=image_size))
     else:
         right_image_dataset.append(misc.imresize(misc.imread(img[42:]), size=image_size))
         right_image_dataset_flip.append(misc.imresize(np.fliplr(misc.imread(img[42:])), size=image_size))
-print("\nLoading right images complete, norm+flip: ", len(right_image_dataset)+len(right_image_dataset_flip), "\n")
+        right_image_dataset_tranformed.append(misc.imresize(transform_image(misc.imread(img[42:])), size=image_size))
+        right_image_dataset_flip_tranformed.append(misc.imresize(transform_image(np.fliplr(misc.imread(img[42:]))), size=image_size))
+print("\nLoading right images complete, norm+flip+trans_norm+trans_flip: ", len(right_image_dataset)*4, "\n")
 #transform the arrays into numpy arrays
 center_image_dataset = np.asarray(center_image_dataset)
 left_image_dataset = np.asarray(left_image_dataset)
@@ -86,6 +109,12 @@ right_image_dataset = np.asarray(right_image_dataset)
 center_image_dataset_flip = np.asarray(center_image_dataset_flip)
 left_image_dataset_flip = np.asarray(left_image_dataset_flip)
 right_image_dataset_flip = np.asarray(right_image_dataset_flip)
+center_image_dataset_tranformed = np.asarray(center_image_dataset_tranformed)
+left_image_dataset_tranformed = np.asarray(left_image_dataset_tranformed)
+right_image_dataset_tranformed = np.asarray(right_image_dataset_tranformed)
+center_image_dataset_flip_tranformed = np.asarray(center_image_dataset_flip_tranformed)
+left_image_dataset_flip_tranformed = np.asarray(left_image_dataset_flip_tranformed)
+right_image_dataset_flip_tranformed = np.asarray(right_image_dataset_flip_tranformed)
 #initialise empty arrays to process the labels(steering angles) like the pictures above
 steering_angles_left = []
 steering_angles_right = []
@@ -103,10 +132,15 @@ for angle in steering_angles:
     steering_angles_right_flip.append(float(-(angle - angle_correction)))
 #concatenate all the image data as the database input
 dataset_inputs = np.concatenate((center_image_dataset, left_image_dataset, right_image_dataset,\
-center_image_dataset_flip, left_image_dataset_flip, right_image_dataset_flip), axis=0)
+center_image_dataset_flip, left_image_dataset_flip, right_image_dataset_flip,\
+center_image_dataset_tranformed, left_image_dataset_tranformed, right_image_dataset_tranformed,\
+center_image_dataset_flip_tranformed, left_image_dataset_flip_tranformed,\
+right_image_dataset_flip_tranformed), axis=0)
 #concatenate all the label(steering_angle) data as the database labels, use the same order as the image concatenation
 dataset_labels = np.concatenate((steering_angles, steering_angles_left, steering_angles_right,\
-steering_angles_flip, steering_angles_left_flip, steering_angles_right_flip), axis=0)
+steering_angles_flip, steering_angles_left_flip, steering_angles_right_flip,\
+steering_angles, steering_angles_left, steering_angles_right, steering_angles_flip,\
+steering_angles_left_flip, steering_angles_right_flip), axis=0)
 #shuffle the data prior to concatenation
 dataset_inputs, dataset_labels = shuffle(dataset_inputs, dataset_labels)
 print("total number of inputs and labels is:", dataset_inputs.shape, dataset_labels.shape)
@@ -126,30 +160,30 @@ model.add(Cropping2D(cropping=((crop_t,crop_b), (0,0))))
 #normalisation>convolutions>flat>single output
 #convolutional layer, filters=32@3x3 stride, border mode is set to valid
 model.add(Convolution2D(32, 3, 3, border_mode='valid'))
-#relu activation
-model.add(Activation('relu'))
+#ELU activation
+model.add(ELU())
 #maxpool layer with 2x2 filter
 model.add(MaxPooling2D(pool_size = (2,2)))
 #convolutional layer, filters=32@3x3 stride
 model.add(Convolution2D(32, 3, 3))
-#relu activation
-model.add(Activation('relu'))
+#ELU activation
+model.add(ELU())
 #maxpool layer with 2x2 filter
 model.add(MaxPooling2D(pool_size = (2,2)))
 #convolutional layer, filters=32@3x3 stride
 model.add(Convolution2D(32, 3, 3))
-#relu activation
-model.add(Activation('relu'))
+#ELU activation
+model.add(ELU())
 #flatten the input to 1D
 model.add(Flatten())
 #drop out layer with keep = 20%
 model.add(Dropout(0.20))
-#relu activation
-model.add(Activation('relu'))
+#ELU activation
+model.add(ELU())
 #drop out layer with keep = 50%
 model.add(Dropout(0.50))
-#relu activation
-model.add(Activation('relu'))
+#ELU activation
+model.add(ELU())
 #full connected layer to the single output node
 model.add(Dense(1))
 #mean square error and Adam optimiser used
